@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import useCardStore from '../../stores/card-store';
 import TimePickerModal from '../../components/TimePickerModal';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { scheduleNotification, cancelNotifications, requestNotificationPermissions } from '../../utils/notifications';
 
 export default function Settings() {
-  const { notificationSettings, updateNotificationSettings } = useCardStore();
+  const { notificationSettings, updateNotificationSettings, deleteAllCards } = useCardStore();
   const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
+  const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
 
   const toggleNotifications = async (value: boolean) => {
     if (value) {
       const hasPermission = await requestNotificationPermissions();
       if (!hasPermission) {
-        // If permission denied, keep notifications disabled
         return;
       }
       await scheduleNotification(notificationSettings.notificationTime);
@@ -34,6 +35,11 @@ export default function Settings() {
     if (notificationSettings.enabled) {
       setIsTimePickerVisible(true);
     }
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteAllCards();
+    setIsDeleteDialogVisible(false);
   };
 
   return (
@@ -68,11 +74,29 @@ export default function Settings() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Data Management</Text>
+        <TouchableOpacity
+          style={[styles.settingRow, styles.deleteButton]}
+          onPress={() => setIsDeleteDialogVisible(true)}
+        >
+          <Text style={styles.deleteText}>Delete All Flashcards</Text>
+        </TouchableOpacity>
+      </View>
+
       <TimePickerModal
         visible={isTimePickerVisible}
         onClose={() => setIsTimePickerVisible(false)}
         onSave={handleTimeChange}
         initialTime={notificationSettings.notificationTime}
+      />
+
+      <ConfirmDialog
+        visible={isDeleteDialogVisible}
+        title="Delete All Flashcards"
+        message="Are you sure you want to delete all flashcards? This action cannot be undone."
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setIsDeleteDialogVisible(false)}
       />
     </View>
   );
@@ -114,5 +138,12 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: '#999',
+  },
+  deleteButton: {
+    borderBottomWidth: 0,
+  },
+  deleteText: {
+    fontSize: 16,
+    color: '#FF3B30',
   },
 });
