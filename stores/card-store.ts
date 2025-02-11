@@ -7,7 +7,7 @@ export interface Card {
   question: string;
   answer: string;
   category?: string;
-  lastReviewed: number;
+  lastReviewed: number | null; // null means never reviewed
   interval: number; // in hours
 }
 
@@ -43,7 +43,7 @@ const useCardStore = create<CardStore>()(
           question,
           answer,
           category,
-          lastReviewed: Date.now(),
+          lastReviewed: null, // Mark as never reviewed
           interval: 1, // Start with 1 hour interval
         };
         set({ cards: [...get().cards, newCard] });
@@ -75,6 +75,9 @@ const useCardStore = create<CardStore>()(
       getDueCards: () => {
         const now = Date.now();
         return get().cards.filter(card => {
+          // New cards (never reviewed) are always due
+          if (card.lastReviewed === null) return true;
+          
           const hoursSinceReview = (now - card.lastReviewed) / (1000 * 60 * 60);
           return hoursSinceReview >= card.interval;
         });
