@@ -1,24 +1,28 @@
 import { useCallback, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { Link } from 'expo-router';
-import useCardStore from '../stores/card-store';
+import { Link, router } from 'expo-router';
+import useCardStore from '../../stores/card-store';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { 
   useAnimatedStyle, 
   withTiming,
   useSharedValue,
   interpolate,
-  runOnJS
 } from 'react-native-reanimated';
-import TimePickerModal from '../components/TimePickerModal';
-import { scheduleNotification, requestNotificationPermissions } from '../utils/notifications';
+import { Ionicons } from '@expo/vector-icons';
+import { scheduleNotification, requestNotificationPermissions } from '../../utils/notifications';
 
 export default function Index() {
   const { cards, reviewCard, getDueCards, notificationSettings, updateNotificationSettings } = useCardStore();
   const [isFlipped, setIsFlipped] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [dueCards, setDueCards] = useState<ReturnType<typeof getDueCards>>([]);
-  
+  const rotate = useSharedValue(0);
+
+  useEffect(() => {
+    setDueCards(getDueCards());
+  }, [cards]);
+
   // Handle first-time setup
   useEffect(() => {
     if (notificationSettings.isFirstTime) {
@@ -37,12 +41,7 @@ export default function Index() {
     }
   }, []);
 
-  useEffect(() => {
-    setDueCards(getDueCards());
-  }, [cards]);
-
   const currentCard = dueCards[currentCardIndex];
-  const rotate = useSharedValue(0);
 
   const frontAnimatedStyle = useAnimatedStyle(() => {
     if (!currentCard) return {};
@@ -88,73 +87,73 @@ export default function Index() {
     );
   };
 
-  if (cards.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>No cards yet!</Text>
-        <Link href="/add" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.buttonText}>Add Cards</Text>
-          </TouchableOpacity>
-        </Link>
-      </View>
-    );
-  }
-
-  if (dueCards.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>No cards due for review!</Text>
-        <Text style={styles.subText}>Come back later</Text>
-        <Link href="/add" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.buttonText}>Add New Card</Text>
-          </TouchableOpacity>
-        </Link>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <View style={styles.cardContainer}>
-        <Animated.View style={[styles.card, frontAnimatedStyle]}>
-          <Text style={styles.cardText}>{currentCard?.question}</Text>
-        </Animated.View>
-        <Animated.View style={[styles.card, styles.cardBack, backAnimatedStyle]}>
-          <Text style={styles.cardText}>{currentCard?.answer}</Text>
-        </Animated.View>
-      </View>
-
-      {!isFlipped ? (
-        <TouchableOpacity style={styles.button} onPress={handleFlip}>
-          <Text style={styles.buttonText}>Show Answer</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.ratingContainer}>
-          <TouchableOpacity style={[styles.ratingButton, styles.hardButton]} onPress={() => handleReview(2)}>
-            <Text style={styles.buttonText}>Hard</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.ratingButton, styles.goodButton]} onPress={() => handleReview(4)}>
-            <Text style={styles.buttonText}>Good</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.ratingButton, styles.easyButton]} onPress={() => handleReview(5)}>
-            <Text style={styles.buttonText}>Easy</Text>
-          </TouchableOpacity>
+      {cards.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.text}>No cards yet!</Text>
+          <Link href="/add" asChild>
+            <TouchableOpacity style={styles.addButton}>
+              <Text style={styles.buttonText}>Add Cards</Text>
+            </TouchableOpacity>
+          </Link>
         </View>
+      ) : dueCards.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.text}>No cards due for review!</Text>
+          <Text style={styles.subText}>Come back later</Text>
+          <Link href="/add" asChild>
+            <TouchableOpacity style={styles.addButton}>
+              <Text style={styles.buttonText}>Add New Card</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+      ) : (
+        <>
+          <View style={styles.cardContainer}>
+            <Animated.View style={[styles.card, frontAnimatedStyle]}>
+              <Text style={styles.cardText}>{currentCard?.question}</Text>
+              <Text style={styles.categoryTag}>{currentCard?.category}</Text>
+            </Animated.View>
+            <Animated.View style={[styles.card, styles.cardBack, backAnimatedStyle]}>
+              <Text style={styles.cardText}>{currentCard?.answer}</Text>
+            </Animated.View>
+          </View>
+
+          {!isFlipped ? (
+            <TouchableOpacity style={styles.button} onPress={handleFlip}>
+              <Text style={styles.buttonText}>Show Answer</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.ratingContainer}>
+              <TouchableOpacity style={[styles.ratingButton, styles.hardButton]} onPress={() => handleReview(2)}>
+                <Text style={styles.buttonText}>Hard</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.ratingButton, styles.goodButton]} onPress={() => handleReview(4)}>
+                <Text style={styles.buttonText}>Good</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.ratingButton, styles.easyButton]} onPress={() => handleReview(5)}>
+                <Text style={styles.buttonText}>Easy</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressText}>
+              {currentCardIndex + 1} / {dueCards.length} cards
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => {
+              router.push('/add');
+            }}
+          >
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
+        </>
       )}
-
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressText}>
-          {currentCardIndex + 1} / {dueCards.length} cards
-        </Text>
-      </View>
-
-      <Link href="/add" asChild>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.buttonText}>Add New Card</Text>
-        </TouchableOpacity>
-      </Link>
     </View>
   );
 }
@@ -165,6 +164,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  subText: {
+    fontSize: 16,
+    color: '#666',
   },
   cardContainer: {
     width: Dimensions.get('window').width * 0.9,
@@ -193,11 +205,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
   },
+  categoryTag: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+  },
   button: {
     backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 8,
     marginVertical: 10,
+    minWidth: 150,
+    alignItems: 'center',
+  },
+  addButton: {
+    backgroundColor: '#34C759',
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
     minWidth: 150,
     alignItems: 'center',
   },
@@ -234,20 +264,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  text: {
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  subText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  addButton: {
-    backgroundColor: '#34C759',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 20,
-    minWidth: 150,
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
     alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 });

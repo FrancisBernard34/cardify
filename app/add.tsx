@@ -6,11 +6,12 @@ import useCardStore from '../stores/card-store';
 export default function AddCard() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
+  const [category, setCategory] = useState('');
   const { addCard } = useCardStore();
 
   const handleSubmit = () => {
     if (question.trim() && answer.trim()) {
-      addCard(question.trim(), answer.trim());
+      addCard(question.trim(), answer.trim(), category);
       router.back();
     }
   };
@@ -21,6 +22,13 @@ export default function AddCard() {
       style={styles.container}
     >
       <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Category (optional)"
+          value={category}
+          onChangeText={setCategory}
+          textAlignVertical="top"
+        />
         <TextInput
           style={styles.input}
           placeholder="Enter question"

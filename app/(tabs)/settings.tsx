@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
-import useCardStore from '../stores/card-store';
-import TimePickerModal from '../components/TimePickerModal';
-import { scheduleNotification, cancelNotifications, requestNotificationPermissions } from '../utils/notifications';
+import useCardStore from '../../stores/card-store';
+import TimePickerModal from '../../components/TimePickerModal';
+import { scheduleNotification, cancelNotifications, requestNotificationPermissions } from '../../utils/notifications';
 
 export default function Settings() {
   const { notificationSettings, updateNotificationSettings } = useCardStore();
