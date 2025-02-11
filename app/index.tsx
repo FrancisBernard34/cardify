@@ -10,13 +10,33 @@ import Animated, {
   interpolate,
   runOnJS
 } from 'react-native-reanimated';
+import TimePickerModal from '../components/TimePickerModal';
+import { scheduleNotification, requestNotificationPermissions } from '../utils/notifications';
 
 export default function Index() {
-  const { cards, reviewCard, getDueCards } = useCardStore();
+  const { cards, reviewCard, getDueCards, notificationSettings, updateNotificationSettings } = useCardStore();
   const [isFlipped, setIsFlipped] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [dueCards, setDueCards] = useState<ReturnType<typeof getDueCards>>([]);
   
+  // Handle first-time setup
+  useEffect(() => {
+    if (notificationSettings.isFirstTime) {
+      const initializeNotifications = async () => {
+        const hasPermission = await requestNotificationPermissions();
+        if (hasPermission) {
+          await scheduleNotification(notificationSettings.notificationTime);
+        }
+        updateNotificationSettings({ 
+          isFirstTime: false,
+          enabled: hasPermission 
+        });
+      };
+      
+      initializeNotifications();
+    }
+  }, []);
+
   useEffect(() => {
     setDueCards(getDueCards());
   }, [cards]);

@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
+import { useColorScheme, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -21,8 +22,34 @@ export default function RootLayout() {
       >
         <Stack.Screen
           name="index"
-          options={{
+          options={({ navigation }) => ({
             title: "Cardify",
+            headerRight: () => (
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('settings')}
+                style={{ marginRight: 15 }}
+              >
+                <Ionicons 
+                  name="settings-outline" 
+                  size={24} 
+                  color={colorScheme === 'dark' ? '#ffffff' : '#000000'} 
+                />
+              </TouchableOpacity>
+            ),
+          })}
+        />
+        <Stack.Screen
+          name="add"
+          options={{
+            title: "Add Card",
+            presentation: "modal",
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            title: "Settings",
+            presentation: "modal",
           }}
         />
       </Stack>

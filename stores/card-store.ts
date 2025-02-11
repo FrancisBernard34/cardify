@@ -13,12 +13,20 @@ export interface Card {
   dueDate: number; // timestamp when card is due for review
 }
 
+interface NotificationSettings {
+  isFirstTime: boolean;
+  notificationTime: string; // Format: "HH:mm"
+  enabled: boolean;
+}
+
 interface CardStore {
   cards: Card[];
+  notificationSettings: NotificationSettings;
   addCard: (question: string, answer: string) => void;
   updateCard: (card: Card) => void;
   reviewCard: (id: string, quality: number) => void; // quality: 0-5 rating of answer
   getDueCards: () => Card[];
+  updateNotificationSettings: (settings: Partial<NotificationSettings>) => void;
 }
 
 // SM-2 algorithm constants
@@ -29,6 +37,11 @@ const useCardStore = create<CardStore>()(
   persist(
     (set, get) => ({
       cards: [],
+      notificationSettings: {
+        isFirstTime: true,
+        notificationTime: "20:00", // Default to 8:00 PM
+        enabled: true,
+      },
       
       addCard: (question: string, answer: string) => {
         const newCard: Card = {
@@ -96,6 +109,14 @@ const useCardStore = create<CardStore>()(
         const now = Date.now();
         return get().cards.filter((card) => card.dueDate <= now);
       },
+
+      updateNotificationSettings: (settings: Partial<NotificationSettings>) =>
+        set((state) => ({
+          notificationSettings: {
+            ...state.notificationSettings,
+            ...settings,
+          },
+        })),
     }),
     {
       name: 'cardify-storage',
