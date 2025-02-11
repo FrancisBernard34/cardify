@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, RefreshControl } from 'react-native';
 import { Link, router } from 'expo-router';
 import useCardStore from '../../stores/card-store';
 import { StatusBar } from 'expo-status-bar';
@@ -17,11 +17,32 @@ export default function Index() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [dueCards, setDueCards] = useState<ReturnType<typeof getDueCards>>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const rotate = useSharedValue(0);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    const currentDueCards = getDueCards();
+    setDueCards(currentDueCards);
+    setRefreshing(false);
+  }, [getDueCards]);
+
+  // Check for due cards when cards array changes
   useEffect(() => {
     setDueCards(getDueCards());
   }, [cards]);
+
+  // Periodically check for new due cards (every minute)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentDueCards = getDueCards();
+      if (currentDueCards.length !== dueCards.length) {
+        setDueCards(currentDueCards);
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [dueCards.length]);
 
   // Handle first-time setup
   useEffect(() => {
@@ -88,82 +109,98 @@ export default function Index() {
   };
 
   return (
-    <View style={styles.container}>
-      {cards.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.text}>No cards yet!</Text>
-          <Link href="/add" asChild>
-            <TouchableOpacity style={styles.addButton}>
-              <Text style={styles.buttonText}>Add Cards</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      ) : dueCards.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.text}>No cards due for review!</Text>
-          <Text style={styles.subText}>Come back later</Text>
-          <Link href="/add" asChild>
-            <TouchableOpacity style={styles.addButton}>
-              <Text style={styles.buttonText}>Add New Card</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      ) : (
-        <>
-          <View style={styles.cardContainer}>
-            <Animated.View style={[styles.card, frontAnimatedStyle]}>
-              <Text style={styles.cardText}>{currentCard?.question}</Text>
-              <Text style={styles.categoryTag}>{currentCard?.category}</Text>
-            </Animated.View>
-            <Animated.View style={[styles.card, styles.cardBack, backAnimatedStyle]}>
-              <Text style={styles.cardText}>{currentCard?.answer}</Text>
-            </Animated.View>
+    <ScrollView 
+      contentContainerStyle={styles.scrollContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#007AFF"
+          title="Pull to check for due cards"
+        />
+      }
+    >
+      <View style={styles.container}>
+        {cards.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.text}>No cards yet!</Text>
+            <Link href="/add" asChild>
+              <TouchableOpacity style={styles.addButton}>
+                <Text style={styles.buttonText}>Add Cards</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
-
-          {!isFlipped ? (
-            <TouchableOpacity style={styles.button} onPress={handleFlip}>
-              <Text style={styles.buttonText}>Show Answer</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.ratingContainer}>
-              <TouchableOpacity style={[styles.ratingButton, styles.hardButton]} onPress={() => handleReview(2)}>
-                <Text style={styles.buttonText}>Hard</Text>
+        ) : dueCards.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.text}>No cards due for review!</Text>
+            <Text style={styles.subText}>Pull down to check for due cards</Text>
+            <Link href="/add" asChild>
+              <TouchableOpacity style={styles.addButton}>
+                <Text style={styles.buttonText}>Add New Card</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.ratingButton, styles.goodButton]} onPress={() => handleReview(4)}>
-                <Text style={styles.buttonText}>Good</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.ratingButton, styles.easyButton]} onPress={() => handleReview(5)}>
-                <Text style={styles.buttonText}>Easy</Text>
-              </TouchableOpacity>
+            </Link>
+          </View>
+        ) : (
+          <>
+            <View style={styles.cardContainer}>
+              <Animated.View style={[styles.card, frontAnimatedStyle]}>
+                <Text style={styles.cardText}>{currentCard?.question}</Text>
+                <Text style={styles.categoryTag}>{currentCard?.category}</Text>
+              </Animated.View>
+              <Animated.View style={[styles.card, styles.cardBack, backAnimatedStyle]}>
+                <Text style={styles.cardText}>{currentCard?.answer}</Text>
+              </Animated.View>
             </View>
-          )}
 
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>
-              {currentCardIndex + 1} / {dueCards.length} cards
-            </Text>
-          </View>
+            {!isFlipped ? (
+              <TouchableOpacity style={styles.button} onPress={handleFlip}>
+                <Text style={styles.buttonText}>Show Answer</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.ratingContainer}>
+                <TouchableOpacity style={[styles.ratingButton, styles.hardButton]} onPress={() => handleReview(2)}>
+                  <Text style={styles.buttonText}>Hard</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.ratingButton, styles.goodButton]} onPress={() => handleReview(4)}>
+                  <Text style={styles.buttonText}>Good</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.ratingButton, styles.easyButton]} onPress={() => handleReview(5)}>
+                  <Text style={styles.buttonText}>Easy</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => {
-              router.push('/add');
-            }}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+            <View style={styles.progressContainer}>
+              <Text style={styles.progressText}>
+                {currentCardIndex + 1} / {dueCards.length} cards
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => {
+                router.push('/add');
+              }}
+            >
+              <Ionicons name="add" size={24} color="#fff" />
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+    minHeight: Dimensions.get('window').height,
   },
   emptyContainer: {
     flex: 1,
