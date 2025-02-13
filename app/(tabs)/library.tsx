@@ -9,11 +9,19 @@ const CardList = memo(({ cards }: { cards: Card[] }) => (
   <View>
     {cards.map((card) => (
       <View key={`card-${card.id}`} style={styles.card}>
-        <Text style={styles.cardQuestion}>{card.question}</Text>
-        <Text style={styles.cardAnswer}>{card.answer}</Text>
-        <Text style={styles.cardMeta}>
-          Last reviewed: {new Date(card.lastReviewed).toLocaleDateString()}
-        </Text>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardQuestion}>{card.question}</Text>
+          <Text style={styles.cardAnswer}>{card.answer}</Text>
+          <Text style={styles.cardMeta}>
+            Last reviewed: {card.lastReviewed ? new Date(card.lastReviewed).toLocaleDateString() : 'Never'}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => router.push(`/edit?id=${card.id}`)}
+        >
+          <Ionicons name="pencil" size={20} color="#007AFF" />
+        </TouchableOpacity>
       </View>
     ))}
   </View>
@@ -129,6 +137,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  cardContent: {
+    flex: 1,
+    marginRight: 10,
   },
   cardQuestion: {
     fontSize: 16,
@@ -143,6 +158,11 @@ const styles = StyleSheet.create({
   cardMeta: {
     fontSize: 12,
     color: '#999',
+  },
+  editButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
   },
   emptyState: {
     justifyContent: 'center',

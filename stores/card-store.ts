@@ -20,6 +20,7 @@ interface CardStore {
   };
   addCard: (question: string, answer: string, category?: string) => void;
   updateCard: (card: Card) => void;
+  deleteCard: (id: string) => void;
   reviewCard: (id: string, quality: number) => void;
   deleteAllCards: () => void;
   getDueCards: () => Card[];
@@ -93,8 +94,12 @@ const useCardStore = create<CardStore>()(
             : card.category === category
         );
       },
+      deleteCard: (id: string) =>
+        set(state => ({
+          cards: state.cards.filter(card => card.id !== id)
+        })),
       deleteAllCards: () => set({ cards: [] }),
-      updateNotificationSettings: (settings) => 
+      updateNotificationSettings: (settings) =>
         set(state => ({
           notificationSettings: {
             ...state.notificationSettings,
