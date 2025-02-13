@@ -1,11 +1,10 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../hooks/useTheme";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark, colors } = useTheme();
 
   return (
     <>
@@ -13,9 +12,9 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+            backgroundColor: colors.cardBackground,
           },
-          headerTintColor: isDark ? '#ffffff' : '#000000',
+          headerTintColor: colors.text,
         }}
       >
         <Stack.Screen
@@ -27,6 +26,25 @@ export default function RootLayout() {
           options={{
             presentation: "modal",
             title: "Add Card",
+            headerStyle: {
+              backgroundColor: colors.cardBackground,
+            },
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="edit"
+          options={{
+            presentation: "modal",
+            title: "Edit Card",
+            headerStyle: {
+              backgroundColor: colors.cardBackground,
+            },
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
           }}
         />
       </Stack>

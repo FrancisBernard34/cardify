@@ -32,6 +32,11 @@ yarn-error.*
 #Github
 .github/
 
+# IDEs
+.clinerules
+.cursorrules
+.windsurfrules
+
 # local env files
 .env*.local
 

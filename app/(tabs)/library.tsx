@@ -1,123 +1,23 @@
 import React, { useState, useCallback, memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, StyleSheet as RNStyleSheet } from 'react-native';
 import { Link, router } from 'expo-router';
 import useCardStore from '../../stores/card-store';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../stores/card-store';
+import { useTheme } from '../../hooks/useTheme';
+import { lightTheme } from '../../stores/theme-store';
 
-const CardList = memo(({ cards }: { cards: Card[] }) => (
-  <View>
-    {cards.map((card) => (
-      <View key={`card-${card.id}`} style={styles.card}>
-        <View style={styles.cardContent}>
-          <Text style={styles.cardQuestion}>{card.question}</Text>
-          <Text style={styles.cardAnswer}>{card.answer}</Text>
-          <Text style={styles.cardMeta}>
-            Last reviewed: {card.lastReviewed ? new Date(card.lastReviewed).toLocaleDateString() : 'Never'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => router.push(`/edit?id=${card.id}`)}
-        >
-          <Ionicons name="pencil" size={20} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
-    ))}
-  </View>
-));
-
-const CategoryItem = memo(({ 
-  category, 
-  isExpanded, 
-  onToggle, 
-  cards 
-}: { 
-  category: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-  cards: Card[];
-}) => (
-  <View style={styles.categoryContainer}>
-    <TouchableOpacity
-      style={styles.categoryHeader}
-      onPress={onToggle}
-    >
-      <Text style={styles.categoryTitle}>
-        {category} ({cards.length})
-      </Text>
-      <Ionicons
-        name={isExpanded ? 'chevron-up' : 'chevron-down'}
-        size={24}
-        color="#007AFF"
-      />
-    </TouchableOpacity>
-    {isExpanded && <CardList cards={cards} />}
-  </View>
-));
-
-export default function Library() {
-  const { getCategories, getCardsByCategory } = useCardStore();
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  
-  const categories = getCategories();
-
-  const toggleCategory = useCallback((category: string) => {
-    setExpandedCategory(prev => prev === category ? null : category);
-  }, []);
-
-  const renderItem = useCallback(({ item: category }: { item: string }) => (
-    <CategoryItem
-      key={`category-${category}`}
-      category={category}
-      isExpanded={expandedCategory === category}
-      onToggle={() => toggleCategory(category)}
-      cards={getCardsByCategory(category)}
-    />
-  ), [expandedCategory, getCardsByCategory, toggleCategory]);
-
-  if (categories.length === 0) {
-    return (
-      <View style={[styles.container, styles.emptyState]}>
-        <Text style={styles.emptyText}>No flashcards yet</Text>
-        <Link href="/add" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.buttonText}>Create Your First Card</Text>
-          </TouchableOpacity>
-        </Link>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={categories}
-        renderItem={renderItem}
-        keyExtractor={category => `category-${category}`}
-        contentContainerStyle={styles.scrollContainer}
-      />
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/add')}
-      >
-        <Ionicons name="add" size={24} color="#fff" />
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof lightTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.background,
   },
   scrollContainer: {
     paddingVertical: 10,
   },
   categoryContainer: {
     marginBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     overflow: 'hidden',
     marginHorizontal: 15,
@@ -127,16 +27,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
-    backgroundColor: '#fff',
+    backgroundColor: colors.cardBackground,
   },
   categoryTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: colors.text,
   },
   card: {
     padding: 15,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -152,17 +52,14 @@ const styles = StyleSheet.create({
   },
   cardAnswer: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   cardMeta: {
     fontSize: 12,
-    color: '#999',
   },
   editButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
   },
   emptyState: {
     justifyContent: 'center',
@@ -171,18 +68,16 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 20,
   },
   addButton: {
-    backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 8,
     minWidth: 200,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: colors.buttonText,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -193,7 +88,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -203,3 +98,119 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
 });
+
+const CardList = memo(({ cards, colors, styles }: {
+  cards: Card[];
+  colors: typeof lightTheme;
+  styles: ReturnType<typeof createStyles>;
+}) => (
+  <View>
+    {cards.map((card) => (
+      <View key={`card-${card.id}`} style={[styles.card, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
+        <View style={styles.cardContent}>
+          <Text style={[styles.cardQuestion, { color: colors.text }]}>{card.question}</Text>
+          <Text style={[styles.cardAnswer, { color: colors.textSecondary }]}>{card.answer}</Text>
+          <Text style={[styles.cardMeta, { color: colors.textTertiary }]}>
+            Last reviewed: {card.lastReviewed ? new Date(card.lastReviewed).toLocaleDateString() : 'Never'}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: colors.background }]}
+          onPress={() => router.push(`/edit?id=${card.id}`)}
+        >
+          <Ionicons name="pencil" size={20} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+    ))}
+  </View>
+));
+
+const CategoryItem = memo(({
+  category,
+  isExpanded,
+  onToggle,
+  cards,
+  colors,
+  styles
+}: {
+  category: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  cards: Card[];
+  colors: typeof lightTheme;
+  styles: ReturnType<typeof createStyles>;
+}) => (
+  <View style={[styles.categoryContainer, { backgroundColor: colors.cardBackground }]}>
+    <TouchableOpacity
+      style={[styles.categoryHeader, { backgroundColor: colors.cardBackground }]}
+      onPress={onToggle}
+    >
+      <Text style={[styles.categoryTitle, { color: colors.text }]}>
+        {category} ({cards.length})
+      </Text>
+      <Ionicons
+        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+        size={24}
+        color={colors.primary}
+      />
+    </TouchableOpacity>
+    {isExpanded && <CardList cards={cards} colors={colors} styles={styles} />}
+  </View>
+));
+export default function Library() {
+  const { getCategories, getCardsByCategory } = useCardStore();
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const { colors } = useTheme();
+  const categories = getCategories();
+  const styles = createStyles(colors);
+
+  const toggleCategory = useCallback((category: string) => {
+    setExpandedCategory(prev => prev === category ? null : category);
+  }, []);
+
+  const renderItem = useCallback(({ item: category }: { item: string }) => (
+    <CategoryItem
+      key={`category-${category}`}
+      category={category}
+      isExpanded={expandedCategory === category}
+      onToggle={() => toggleCategory(category)}
+      cards={getCardsByCategory(category)}
+      colors={colors}
+      styles={styles}
+    />
+  ), [expandedCategory, getCardsByCategory, toggleCategory, colors, styles]);
+
+  if (categories.length === 0) {
+    return (
+      <View style={[styles.container, styles.emptyState]}>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          No flashcards yet
+        </Text>
+        <Link href="/add" asChild>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.buttonText, { color: colors.buttonText }]}>
+              Create Your First Card
+            </Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container]}>
+      <FlatList
+        data={categories}
+        renderItem={renderItem}
+        keyExtractor={category => `category-${category}`}
+        contentContainerStyle={styles.scrollContainer}
+      />
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push('/add')}
+      >
+        <Ionicons name="add" size={24} color={colors.buttonText} />
+      </TouchableOpacity>
+    </View>
+  );
+}

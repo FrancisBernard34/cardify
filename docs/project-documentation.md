@@ -54,7 +54,7 @@ Cardify is a mobile flashcard application built with React Native and Expo. It h
 - [ ] Progress tracking and statistics
 
 ### User Experience Improvements
-- [ ] Dark mode support
+- [x] Dark mode support with system theme detection
 - [ ] Custom themes
 - [ ] Backup/restore functionality
 - [ ] Import/export cards
