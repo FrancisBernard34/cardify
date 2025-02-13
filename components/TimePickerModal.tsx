@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTheme } from '../hooks/useTheme';
 
 interface TimePickerModalProps {
   visible: boolean;
@@ -17,6 +18,7 @@ export default function TimePickerModal({
   initialTime = "20:00",
   isFirstTime = false 
 }: TimePickerModalProps) {
+  const { colors, isDark } = useTheme();
   const [time, setTime] = React.useState(new Date());
 
   React.useEffect(() => {
@@ -71,12 +73,12 @@ export default function TimePickerModal({
       animationType="fade"
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>
+        <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.title, { color: colors.text }]}>
             {isFirstTime ? 'Welcome to Cardify!' : 'Choose Notification Time'}
           </Text>
           {isFirstTime && (
-            <Text style={styles.description}>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>
               Choose a time for your daily review reminder. You can change this later in settings.
             </Text>
           )}
@@ -86,12 +88,19 @@ export default function TimePickerModal({
             mode="time"
             is24Hour={true}
             onChange={handleTimeChange}
-            style={styles.timePicker}
+            style={[styles.timePicker, Platform.select({ ios: { backgroundColor: colors.cardBackground } })]}
             display="spinner"
+            textColor={colors.text}
+            themeVariant={isDark ? 'dark' : 'light'}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleSave}>
-            <Text style={styles.buttonText}>{isFirstTime ? 'Get Started' : 'Save'}</Text>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.primary }]} 
+            onPress={handleSave}
+          >
+            <Text style={[styles.buttonText, { color: colors.buttonText }]}>
+              {isFirstTime ? 'Get Started' : 'Save'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -107,7 +116,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     width: '80%',
@@ -120,7 +128,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -129,7 +136,6 @@ const styles = StyleSheet.create({
     height: 100,
   },
   button: {
-    backgroundColor: '#007AFF',
     padding: 12,
     borderRadius: 8,
     minWidth: 100,
@@ -137,7 +143,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

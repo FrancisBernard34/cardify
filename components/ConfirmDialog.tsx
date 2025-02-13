@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -16,6 +17,8 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { colors } = useTheme();
+
   return (
     <Modal
       visible={visible}
@@ -23,21 +26,21 @@ export default function ConfirmDialog({
       animationType="fade"
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+        <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
-              style={[styles.button, styles.cancelButton]} 
+              style={[styles.button, { backgroundColor: colors.disabled }]} 
               onPress={onCancel}
             >
-              <Text style={styles.buttonText}>Cancel</Text>
+              <Text style={[styles.buttonText, { color: colors.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.button, styles.confirmButton]} 
+              style={[styles.button, { backgroundColor: colors.danger }]} 
               onPress={onConfirm}
             >
-              <Text style={styles.buttonText}>Delete All</Text>
+              <Text style={[styles.buttonText, { color: colors.buttonText }]}>Delete All</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -54,7 +57,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     width: '80%',
@@ -67,7 +69,6 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -82,14 +83,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
   },
-  cancelButton: {
-    backgroundColor: '#999',
-  },
-  confirmButton: {
-    backgroundColor: '#FF3B30',
-  },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

@@ -20,6 +20,7 @@ Cardify is a mobile flashcard application built with React Native and Expo. It h
 - [x] Basic SuperMemo 2 algorithm implementation
 - [x] Persistent storage of cards and settings
 - [x] Daily review reminders via notifications
+- [x] Dark mode support with system theme detection
 
 ### Card Management
 - [x] Add new cards with question/answer pairs
@@ -54,8 +55,6 @@ Cardify is a mobile flashcard application built with React Native and Expo. It h
 - [ ] Progress tracking and statistics
 
 ### User Experience Improvements
-- [x] Dark mode support with system theme detection
-- [ ] Custom themes
 - [ ] Backup/restore functionality
 - [ ] Import/export cards
 - [ ] Multiple decks support
@@ -64,11 +63,7 @@ Cardify is a mobile flashcard application built with React Native and Expo. It h
 - [ ] Batch card creation
 
 ### Advanced Features
-- [ ] Study reminders based on due cards
 - [ ] Learning streaks and achievements
-- [ ] Card sharing between users
-- [ ] Cloud sync support
-- [ ] Offline mode
 - [ ] Practice modes (quiz, matching, etc.)
 - [ ] Performance analytics dashboard
 - [ ] Custom review intervals

@@ -11,6 +11,140 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { scheduleNotification, requestNotificationPermissions } from '../../utils/notifications';
+import { useTheme } from '../../hooks/useTheme';
+import { lightTheme } from '../../stores/theme-store';
+
+const createStyles = (colors: typeof lightTheme) => StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    minHeight: Dimensions.get('window').height,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 20,
+    color: colors.text,
+  },
+  subText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  cardContainer: {
+    width: Dimensions.get('window').width * 0.9,
+    height: 200,
+    marginBottom: 20,
+  },
+  card: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.cardBackground,
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBack: {
+    backgroundColor: colors.cardBackground,
+  },
+  cardText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: colors.text,
+  },
+  categoryTag: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: colors.border,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    color: colors.text,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 10,
+    minWidth: 150,
+    alignItems: 'center',
+  },
+  addButton: {
+    backgroundColor: colors.success,
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
+    minWidth: 150,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: colors.buttonText,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 10,
+  },
+  ratingButton: {
+    padding: 15,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  hardButton: {
+    backgroundColor: colors.danger,
+  },
+  goodButton: {
+    backgroundColor: colors.success,
+  },
+  easyButton: {
+    backgroundColor: colors.primary,
+  },
+  progressContainer: {
+    marginTop: 20,
+  },
+  progressText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+});
 
 export default function Index() {
   const { cards, reviewCard, getDueCards, notificationSettings, updateNotificationSettings } = useCardStore();
@@ -19,6 +153,8 @@ export default function Index() {
   const [dueCards, setDueCards] = useState<ReturnType<typeof getDueCards>>([]);
   const [refreshing, setRefreshing] = useState(false);
   const rotate = useSharedValue(0);
+  const { colors, isDark } = useTheme();
+  const styles = createStyles(colors);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -27,24 +163,21 @@ export default function Index() {
     setRefreshing(false);
   }, [getDueCards]);
 
-  // Check for due cards when cards array changes
   useEffect(() => {
     setDueCards(getDueCards());
   }, [cards]);
 
-  // Periodically check for new due cards (every minute)
   useEffect(() => {
     const interval = setInterval(() => {
       const currentDueCards = getDueCards();
       if (currentDueCards.length !== dueCards.length) {
         setDueCards(currentDueCards);
       }
-    }, 60000); // Check every minute
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [dueCards.length]);
 
-  // Handle first-time setup
   useEffect(() => {
     if (notificationSettings.isFirstTime) {
       const initializeNotifications = async () => {
@@ -100,7 +233,6 @@ export default function Index() {
     setIsFlipped(false);
     rotate.value = withTiming(0, { duration: 0 });
     
-    // Update current card index and due cards
     const remainingDueCards = getDueCards();
     setDueCards(remainingDueCards);
     setCurrentCardIndex((prev) => 
@@ -115,12 +247,14 @@ export default function Index() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#007AFF"
+          tintColor={colors.primary}
           title="Pull to check for due cards"
+          titleColor={colors.text}
         />
       }
     >
       <View style={styles.container}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         {cards.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.text}>No cards yet!</Text>
@@ -178,11 +312,9 @@ export default function Index() {
 
             <TouchableOpacity
               style={styles.fab}
-              onPress={() => {
-                router.push('/add');
-              }}
+              onPress={() => router.push('/add')}
             >
-              <Ionicons name="add" size={24} color="#fff" />
+              <Ionicons name="add" size={24} color={colors.buttonText} />
             </TouchableOpacity>
           </>
         )}
@@ -190,131 +322,3 @@ export default function Index() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    minHeight: Dimensions.get('window').height,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  subText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  cardContainer: {
-    width: Dimensions.get('window').width * 0.9,
-    height: 200,
-    marginBottom: 20,
-  },
-  card: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBack: {
-    backgroundColor: '#f8f8f8',
-  },
-  cardText: {
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  categoryTag: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    marginVertical: 10,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  addButton: {
-    backgroundColor: '#34C759',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 20,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginVertical: 10,
-  },
-  ratingButton: {
-    padding: 15,
-    borderRadius: 8,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  hardButton: {
-    backgroundColor: '#FF3B30',
-  },
-  goodButton: {
-    backgroundColor: '#34C759',
-  },
-  easyButton: {
-    backgroundColor: '#007AFF',
-  },
-  progressContainer: {
-    marginTop: 20,
-  },
-  progressText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-});

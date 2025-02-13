@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import useCardStore from '../../stores/card-store';
+import useThemeStore from '../../stores/theme-store';
+import { useTheme } from '../../hooks/useTheme';
 import TimePickerModal from '../../components/TimePickerModal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { scheduleNotification, cancelNotifications, requestNotificationPermissions } from '../../utils/notifications';
 
 export default function Settings() {
   const { notificationSettings, updateNotificationSettings, deleteAllCards } = useCardStore();
+  const { setTheme, setUseSystemTheme, useSystemTheme, theme } = useThemeStore();
+  const { colors, isDark } = useTheme();
   const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
   const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
 
@@ -42,12 +46,38 @@ export default function Settings() {
     setIsDeleteDialogVisible(false);
   };
 
+  const handleThemeChange = (useDark: boolean) => {
+    setTheme(useDark ? 'dark' : 'light');
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingText}>Daily Reminder</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+        <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.settingText, { color: colors.text }]}>Use System Theme</Text>
+          <Switch
+            value={useSystemTheme}
+            onValueChange={setUseSystemTheme}
+          />
+        </View>
+        <View style={[styles.settingRow, { 
+          borderBottomColor: colors.border,
+          opacity: useSystemTheme ? 0.5 : 1
+        }]}>
+          <Text style={[styles.settingText, { color: colors.text }]}>Dark Mode</Text>
+          <Switch
+            value={isDark}
+            onValueChange={handleThemeChange}
+            disabled={useSystemTheme}
+          />
+        </View>
+      </View>
+
+      <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Notifications</Text>
+        <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.settingText, { color: colors.text }]}>Daily Reminder</Text>
           <Switch
             value={notificationSettings.enabled}
             onValueChange={toggleNotifications}
@@ -56,15 +86,17 @@ export default function Settings() {
         <TouchableOpacity
           style={[
             styles.settingRow,
+            { borderBottomColor: colors.border },
             !notificationSettings.enabled && styles.disabled
           ]}
           onPress={handleTimePress}
           disabled={!notificationSettings.enabled}
         >
-          <Text style={styles.settingText}>Reminder Time</Text>
+          <Text style={[styles.settingText, { color: colors.text }]}>Reminder Time</Text>
           <Text style={[
             styles.settingValue,
-            !notificationSettings.enabled && styles.disabledText
+            { color: colors.primary },
+            !notificationSettings.enabled && { color: colors.disabled }
           ]}>
             {new Date(`2000-01-01T${notificationSettings.notificationTime}`).toLocaleTimeString([], {
               hour: '2-digit',
@@ -74,13 +106,13 @@ export default function Settings() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Data Management</Text>
+      <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Data Management</Text>
         <TouchableOpacity
           style={[styles.settingRow, styles.deleteButton]}
           onPress={() => setIsDeleteDialogVisible(true)}
         >
-          <Text style={styles.deleteText}>Delete All Flashcards</Text>
+          <Text style={[styles.deleteText, { color: colors.danger }]}>Delete All Flashcards</Text>
         </TouchableOpacity>
       </View>
 
@@ -108,7 +140,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   section: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -124,26 +155,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   settingText: {
     fontSize: 16,
   },
   settingValue: {
     fontSize: 16,
-    color: '#007AFF',
   },
   disabled: {
     opacity: 0.5,
-  },
-  disabledText: {
-    color: '#999',
   },
   deleteButton: {
     borderBottomWidth: 0,
   },
   deleteText: {
     fontSize: 16,
-    color: '#FF3B30',
   },
 });
