@@ -29,18 +29,42 @@ yarn-error.*
 .DS_Store
 *.pem
 
-#Github
-.github/
-
-# IDEs
-.clinerules
-.cursorrules
-.windsurfrules
-
 # local env files
 .env*.local
 
 # typescript
 *.tsbuildinfo
 
-app-example
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.log
+*.tmp
+
+# Build
+build/
+dist/
+
+# Expo web
+web-build/
+
+# @generated expo-cli sync-2b81b286409207a5da26e14c78851eb30d8ccbdb
+.expo/
+
+# @generated expo-cli sync-e71ce58863c4d5c25ce750a54f300229f9f0f1dd
+.expo/
+web-build/
+dist/
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+
+# Example app
+app-example/
+
+#AI
+.github/prompts
